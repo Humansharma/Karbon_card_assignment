@@ -16,6 +16,7 @@ app.use(bodyParser.json());
 app.post('/scrape', scrape);
 
 app.use(express.static('public'));
+//Account pass to login 
 const pass="Madgenius.12@"
 
 app.get('/', (req, res) => {
@@ -40,7 +41,7 @@ async function scrape(req, res) {
     const page = await browser.newPage();
     const navigationPromise = page.waitForNavigation({waitUntil: "domcontentloaded"});
 
-    const scrapedData = [{ companyName: "companyName", website: "website", linkedInUrl: "linkedInUrl", contactInfo: "contactInfo" }];
+    const scrapedData = [{ companyName: "companyName", website: "website", linkedInUrl: "linkedInUrl", contactInfo: "contactInfo"}];
 
     await page.goto(`https://www.linkedin.com/login`);
     await page.type('#username', "humansharmaindia@gmail.com")
@@ -50,31 +51,38 @@ async function scrape(req, res) {
 
     console.log("Logged In Successfully");
 
-    // Loop through each company name
+    // traverse each company by for loop
     for (let companyName of companyNames) {
-      // Visit LinkedIn and search for the company
+     
       let response = await page.goto(`https://www.linkedin.com/search/results/companies/?keywords=${companyName}`);
       await navigationPromise;
 
       // const textContent = await page.$$eval('.reusable-search__entity-result-list', 
       // (elements) => elements.map((element) => element.textContent))
 
-      // Wait for search results to load
+     
       await page.waitForSelector('.reusable-search__entity-result-list');
 
-      // Click on the first search result
+     
       await page.click('.reusable-search__result-container');
 
-      // Wait for the company page to load
+      
       await page.waitForSelector('.org-top-card');
 
-      // Extract company information
+      // to fetch all required data
       const companyInfo = await page.evaluate(() => {
-        const companyName = document.querySelector('.org-top-card-summary__title').innerText.trim();
+        const companyName =  document.querySelector('.org-top-card-summary__title')?document.querySelector('.org-top-card-summary__title').innerText.trim():"Not Known";
         const website = document.querySelector('.org-top-card-primary-actions__inner a')? document.querySelector('.org-top-card-primary-actions__inner a').href: "undefined";
-        const linkedInUrl = window.location.href;
-        const contactInfo = document.querySelector('.org-top-card-summary-info-list__info-item').innerText.trim();
-        return { companyName, website, linkedInUrl, contactInfo };
+        const linkedInUrl = window.location?window.location.href:"page not found";
+        const contactInfo = document.querySelector('.org-top-card-summary-info-list__info-item')?document.querySelector('.org-top-card-summary-info-list__info-item').innerText.trim():"Not found";
+       // const ceoNameElement = document.querySelector('.org-top-card-summary-info-list__info-item span');
+       // const ceoTitleElement = document.querySelector('.org-top-card-summary-info-list__info-item span');
+
+       // const ceoName = ceoNameElement ? ceoNameElement.innerText.trim() : 'N/A';
+        //const ceoTitle = ceoTitleElement ? ceoTitleElement.innerText.trim() : 'N/A';
+
+      
+        return { companyName, website, linkedInUrl, contactInfo};
        // return {companyName}
       });
     //   console.log(companyInfo);
@@ -83,24 +91,24 @@ async function scrape(req, res) {
 
     await browser.close();
 
-    // // Convert scraped data to CSV
+    // // csv file
     let csvData = scrapedData.map(company => `${company.companyName},${company.website},${company.linkedInUrl},${company.contactInfo}`).join('\n');
     // csvData = `companyname,website,LinkedIn,CompanyInfo`
     // const Column= ['companyname', 'website', 'LinkedIn', 'CompanyInfo'];
-    // Write CSV data to a file
+   
     const fileName = 'scraped_data.csv';
     // fs.writeFileSync(fileName, Column);
     fs.writeFileSync(fileName, csvData);
 
-    // Set response headers for downloading CSV
+    
     res.setHeader('Content-Disposition', 'attachment', filename=`${fileName}`);
     res.setHeader('Content-Type', 'text/csv');
 
-    // Send the CSV file in the response
+    
     res.sendFile(fileName, { root: __dirname });
     console.log(__dirname)
 
-    // // Delete the temporary CSV file
+    
     // fs.unlinkSync(fileName);
   } catch (error) {
     console.error(error);
