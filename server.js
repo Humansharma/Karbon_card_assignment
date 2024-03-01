@@ -17,7 +17,7 @@ app.post('/scrape', scrape);
 
 app.use(express.static('public'));
 //Account pass to login 
-const pass="Madgenius.12@"
+const pass="Your LinkedIn Password"
 
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'Index.html'));
@@ -44,7 +44,7 @@ async function scrape(req, res) {
     const scrapedData = [{ companyName: "companyName", website: "website", linkedInUrl: "linkedInUrl", contactInfo: "contactInfo"}];
 
     await page.goto(`https://www.linkedin.com/login`);
-    await page.type('#username', "humansharmaindia@gmail.com")
+    await page.type('#username', "Your Gmail")
     await page.type('#password', pass)
     await page.click('.login__form_action_container button')
     await page.waitForNavigation({waitUntil: "domcontentloaded"})
